@@ -1,8 +1,8 @@
 <template>
-  <div class="fictitious">
-      <div class="CHeckerboard" v-for="c in fictitious" v-if="c.class==1">
-     <div class="column" v-for="j in Hang" @click="clickBlank(c,j)">
-       <div v-for="i in grid" v-if="i.hang==c.hang&&i.grid==j" @click="select(i,j)">
+  <div class="fictitious" v-bind:class="color ? null : 'fan' ">
+      <div class="CHeckerboard"  v-for="c in fictitious" v-if="c.class==1">
+     <div class="column" v-for="j in Hang" @click="clickBlank(c.hang,j)" v-bind:class="color ? null : 'fan' ">
+       <div v-for="i in grid" v-if="i.hang==c.hang&&i.grid==j" @click="panduan(i)">
         <son   v-bind:c="i" v-if="i.number"/>
        </div>
        </div>
@@ -13,6 +13,8 @@
 </template>
 
 <script>
+var yanse;
+import Vue from 'vue'
 import son from '@/components/son.vue';
 export default {
   name: 'fictitious',
@@ -20,6 +22,47 @@ export default {
     son,
   },
   mounted(){
+    var websocket =new WebSocket("ws://192.168.0.106:8888/test");
+    this.lj=websocket;
+    var _this=this;
+    var data;
+    this.lj.onmessage=function(event){
+    // this.websocket.send("ads");
+ data=JSON.parse(event.data);
+if(data.start=="1"){
+  console.log(data)
+_this.current=data.rule.piece;
+_this.clickBlank(data.rule.hang,data.rule.grid);
+for(var i=0;i<_this.grid.length;i++){
+  console.log(_this.grid[i].grid==data.rule.grid&&_this.grid[i].hang==data.rule.hang)
+  if(_this.grid[i].grid==data.rule.grid&&_this.grid[i].hang==data.rule.hang){
+    _this.select(_this.grid[i]);
+  }
+}
+if(_this.go==data.rule.grid.color){
+_this.go=!data.rule.grid.color;
+}
+console.log(_this.go)
+}else if(data.start=="等待"){
+  alert(data.message)
+}else if(data.start=="开始"){
+  if(data.color){
+    var c =document.getElementsByClassName("fan");
+  while(c.length>0){
+    c =document.getElementsByClassName("fan");
+    c[0].classList.remove("fan");
+  }
+  }
+  yanse=data.color;
+  alert(data.message);
+}else if(data.start=="离开"){
+  alert(data.message);
+}else if(data.start=="id"){
+ _this.id=data.message;
+  _this.name = prompt("你的昵称");
+  websocket.send(JSON.stringify({"userId":_this.id,"message":_this.name,"start":"0"}));
+}
+    }
   },
   methods:{
     choice(){
@@ -968,50 +1011,50 @@ export default {
            for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==Number(this.grid[i].hang)&&this.grid[c].grid==this.grid[i].grid-1){
                     this.current=this.grid[c];
-                    this.grid[i].hang=Number(this.grid[i].grid)-1;
+                    this.grid[i].grid=Number(this.grid[i].grid)-1;
                     if(i>c){
                       i--;
                     }
                     this.grid.splice(c,1);
                     if(this.most()!="将"){
-                       this.grid[i].hang=this.die[0];
+                       this.grid[i].grid=this.die[1];
                       this.grid.push(this.current);
                       return"将"
                     }
-                    this.grid[i].hang=this.die[0];
+                    this.grid[i].grid=this.die[1];
                     this.grid.push(this.current);
                   }
               }
-               this.grid[i].hang=Number(this.grid[i].grid)-1;
+               this.grid[i].grid=Number(this.grid[i].grid)-1;
                 if(this.most()!="将"){
-                       this.grid[i].hang=this.die[0];
+                       this.grid[i].grid=this.die[1];
                       return"将"
                 }
-                this.grid[i].hang=this.die[0];
+                this.grid[i].grid=this.die[1];
          }if(this.current.grid<=4){
            for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==Number(this.grid[i].hang)&&this.grid[c].grid==Number(this.grid[i].grid)+1){
                     this.current=this.grid[c];
-                    this.grid[i].hang=Number(this.grid[i].grid)+1;
+                    this.grid[i].grid=Number(this.grid[i].grid)+1;
                     if(i>c){
                       i--;
                     }
                     this.grid.splice(c,1);
                     if(this.most()!="将"){
-                       this.grid[i].hang=this.die[0];
+                       this.grid[i].grid=this.die[1];
                       this.grid.push(this.current);
                       return"将"
                     }
-                    this.grid[i].hang=this.die[0];
+                    this.grid[i].grid=this.die[1];
                     this.grid.push(this.current);
                   }
               }
-               this.grid[i].hang=Number(this.grid[i].grid)+1;
+               this.grid[i].grid=Number(this.grid[i].grid)+1;
                 if(this.most()!="将"){
-                       this.grid[i].hang=this.die[0];
+                       this.grid[i].grid=this.die[1];
                       return"将"
                 }
-                this.grid[i].hang=this.die[0];
+                this.grid[i].grid=this.die[1];
          }
       }
         }
@@ -1039,6 +1082,7 @@ export default {
             for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==SmallHang&&this.grid[c].grid==this.grid[i].grid){
                     this.current=this.grid[c];
+                    this.grid[i].hang=this.grid[c].hang;
                     this.grid.splice(c,1);
                     if(i>c){
                       i--;
@@ -1057,6 +1101,7 @@ export default {
             for(var j=Number(SmallHang+1);j<this.die[0];j++){
               this.grid[i].hang=j;
               if(this.most()=="帅"){
+                this.grid[i].hang=this.die[0];
               }else{
                   this.grid[i].hang=this.die[0];
                 return "帅"
@@ -1064,6 +1109,7 @@ export default {
             }
             for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==MaxHang&&this.grid[c].grid==this.grid[i].grid){
+                    this.grid[i].hang=this.grid[c].hang;
                     this.current=this.grid[c];
                      this.grid.splice(c,1);
                     if(i>c){
@@ -1083,6 +1129,7 @@ export default {
              for(var j=Number(this.die[0])+1;j<=MaxHang;j++){
               this.grid[i].hang=j;
               if(this.most()=="帅"){
+                this.grid[i].hang=this.die[0];
               }else{
                   this.grid[i].hang=this.die[0];
                 return "帅"
@@ -1091,6 +1138,7 @@ export default {
             this.grid[i].hang=this.die[0];
             for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==this.grid[i].hang&&this.grid[c].grid==SmallLie){
+                    this.grid[i].grid=this.grid[c].grid;
                     this.current=this.grid[c];
                     this.grid.splice(c,1);
                     if(i>c){
@@ -1099,43 +1147,43 @@ export default {
                     if(this.most()=="帅"){
                       this.grid[i].grid=this.die[1];
                       this.grid.push(this.current);
-                  
-              }else{
-                if(j==SmallLie){
+                    }else{
                   this.grid[i].grid=this.die[1];
                   this.grid.push(this.current);
-                }
                 return "帅"
               }
                   }
               }
               for(var j=SmallLie;j<this.die[1];j++){
               this.grid[i].grid=j;
-              if(this.most()=="帅"){
+              if(this.most()!="帅"){
+                this.grid[i].grid=this.die[1];
+                return "帅"
               }
                   this.grid[i].grid=this.die[1];
-                return "帅"
             }
              for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==this.grid[i].hang&&this.grid[c].grid==MaxLie){
                     this.current=this.grid[c];
+                     this.grid[i].grid=this.grid[c].grid;
                      this.grid.splice(c,1);
                     if(i>c){
                       i--;
                     }
                    
-                    if(this.most()=="帅"){
+                    if(this.most()!="帅"){
                       this.grid[i].grid=this.die[1];
                   this.grid.push(this.current);
+                  return "帅"
               }
                    this.grid[i].grid=this.die[1];
                   this.grid.push(this.current);
-                return "帅"
                   }
               }
              for(var j=Number(this.die[1])+1;j<=MaxLie;j++){
               this.grid[i].grid=j;
               if(this.most()=="帅"){
+                this.grid[i].grid=this.die[1];
               }else{
                 this.grid[i].grid=this.die[1];
                 return "帅"
@@ -1904,8 +1952,8 @@ export default {
         if(this.grid[i].hang-1>=0){
             for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==this.grid[i].hang-1&&this.grid[c].grid==this.grid[i].grid){
-                    this.current=this.grid[c];
                     this.grid[i].hang=this.grid[i].hang-1;
+                    this.current=this.grid[c];
                     if(i>c){
                       i--;
                     }
@@ -1929,8 +1977,8 @@ export default {
          if(this.grid[i].hang<3){
            for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==Number(this.grid[i].hang)+1&&this.grid[c].grid==this.grid[i].grid){
-                    this.current=this.grid[c];
                     this.grid[i].hang=Number(this.grid[i].hang)+1;
+                    this.current=this.grid[c];
                     if(i>c){
                       i--;
                     }
@@ -1955,50 +2003,51 @@ export default {
            for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==Number(this.grid[i].hang)&&this.grid[c].grid==this.grid[i].grid-1){
                     this.current=this.grid[c];
-                    this.grid[i].hang=Number(this.grid[i].grid)-1;
+                    this.grid[i].grid=Number(this.grid[i].grid)-1;
                     if(i>c){
                       i--;
                     }
                     this.grid.splice(c,1);
                     if(this.most()!="帅"){
-                       this.grid[i].hang=this.die[0];
+                       this.grid[i].grid=this.die[1];
                       this.grid.push(this.current);
                       return"帅"
                     }
-                    this.grid[i].hang=this.die[0];
+                    this.grid[i].grid=this.die[1];
                     this.grid.push(this.current);
                   }
               }
-               this.grid[i].hang=Number(this.grid[i].grid)-1;
+               this.grid[i].grid=Number(this.grid[i].grid)-1;
                 if(this.most()!="帅"){
-                       this.grid[i].hang=this.die[0];
+                       this.grid[i].grid=this.die[1];
                       return"帅"
                 }
-                this.grid[i].hang=this.die[0];
-         }if(this.grid[i].grid<=4){
+                this.grid[i].grid=this.die[1];
+         }
+         if(this.grid[i].grid<=4){
            for(var c=0;c < this.grid.length;c++){
                   if(this.grid[c].hang==Number(this.grid[i].hang)&&this.grid[c].grid==Number(this.grid[i].grid)+1){
                     this.current=this.grid[c];
-                    this.grid[i].hang=Number(this.grid[i].grid)+1;
+                    this.grid[i].grid=Number(this.grid[i].grid)+1;
                     if(i>c){
                       i--;
                     }
                     this.grid.splice(c,1);
                     if(this.most()!="帅"){
-                       this.grid[i].hang=this.die[0];
+                       this.grid[i].grid=this.die[1];
                       this.grid.push(this.current);
                       return"帅"
                     }
-                    this.grid[i].hang=this.die[0];
+                    this.grid[i].grid=this.die[1];
                     this.grid.push(this.current);
                   }
               }
-               this.grid[i].hang=Number(this.grid[i].grid)+1;
+               this.grid[i].grid=Number(this.grid[i].grid)+1;
                 if(this.most()!="帅"){
-                       this.grid[i].hang=this.die[0];
+                       this.grid[i].grid=this.die[1];
                       return"帅"
                 }
-                this.grid[i].hang=this.die[0];
+                this.grid[i].grid=this.die[1];
          }
       }
         }
@@ -2484,7 +2533,7 @@ export default {
       if(this.current==null){
           return
       }
-      if(this.judge(c.hang,j)){
+      if(this.judge(c,j)){
         if(this.start){
           if(this.current!=null){
       this.current.number=true;
@@ -2495,15 +2544,15 @@ export default {
         return
       }else{
         for(var b=0;b<this.grid.length;b++){
-            if(this.grid[b]==this.current&&(this.grid[b].hang!=c.hang||this.grid[b].grid!=j)){
+            if(this.grid[b].text==this.current.text&&this.grid[b].hang==this.current.hang&&this.grid[b].grid==this.current.grid&&(this.grid[b].hang!=c||this.grid[b].grid!=j)){
               for(var i=0;i<this.grid.length;i++){
-              if(this.grid[i].grid==j&&this.grid[i].hang==c.hang){
+              if(this.grid[i].grid==j&&this.grid[i].hang==c){
                 this.start=!this.start;
                   return
               }
               }
               this.die=[this.grid[b].hang,this.grid[b].grid];
-              this.grid[b].hang=c.hang;
+              this.grid[b].hang=c;
               this.grid[b].grid=j;
               if(this.most()=="将"&&!this.go){
                 this.grid[b].hang=this.die[0];
@@ -2515,6 +2564,9 @@ export default {
                 this.grid[b].grid=this.die[1];
                 alert("被将军")
                 return
+              }
+              if(this.go!=yanse){
+this.lj.send(JSON.stringify({"userId":this.id,"rule":{"hang":this.grid[b].hang,"grid":this.grid[b].grid,"piece": {"text":this.current.text,"hang":this.die[0],"grid":this.die[1],"color":this.current.color,"number":true}},"start":"1"}));
               }
               this.go=!this.go;
               this.start=!this.start;
@@ -2530,7 +2582,13 @@ export default {
           }
       }
     },
-    select(i,j){
+    panduan(i,j){
+      if(i.color==yanse&&this.current==null){
+          return
+      }
+      this.select(i);
+    },
+    select(i){
       if(this.current==null&&this.go==i.color){
           this.current=i;
           this.current.number=false;
@@ -2547,6 +2605,11 @@ export default {
       if(this.current==null&&this.go!=i.color){
           return
       }
+      for(var b=0;b<this.grid.length;b++){
+            if(this.grid[b].text==this.current.text&&this.grid[b].hang==this.current.hang&&this.grid[b].grid==this.current.grid){
+              this.current=this.grid[b];
+            }
+     }
       if(this.judge(i.hang,i.grid)){
         clearInterval(this.ding);
         if(this.current!=null){
@@ -2584,8 +2647,15 @@ export default {
                 alert("被将军")
                 return
               }
+              if(yanse){
+                
+              }
+              if(this.go!=yanse){
+this.lj.send(JSON.stringify({"userId":this.id,"rule":{"hang":this.grid[b].hang,"grid":this.grid[b].grid,"piece":this.current},"start":"1"}));
+              }
           }
           }
+          
           this.start=!this.start;
           clearInterval(this.ding);
       this.current.number=true;
@@ -2606,6 +2676,10 @@ export default {
   data(){
       return{
         ding:null,
+        color:false,
+        name:"",
+        lj:null,
+        id:"",
         text:[
           {"text1":"象","text2":"相"},
           {"text1":"卒","text2":"兵"},
@@ -2695,5 +2769,8 @@ export default {
          height: 51px;
      }
 }
+}
+.fan{
+  transform:rotate(180deg);
 }
 </style>
