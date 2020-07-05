@@ -32,6 +32,34 @@ export default {
      position: relative;
      top:0;
      left: 0;
+   .line3,.line4,.line5,.line6{
+            position: relative;
+            border-top:  1px solid #000;
+           border-right:  1px solid #000;
+           width: 10px;
+          height: 10px;
+          }
+            .line3{
+            top:-45px;
+            left: -5px;
+            transform:rotate(270deg);
+            float: left;
+            }
+          .line4{
+            top:-45px;
+            left: 21px;
+             float: left;
+          }
+          .line5{
+            top:-17px;
+            left: -5px;
+            transform:rotate(180deg);
+          }
+          .line6{
+            top:-5px;
+            left: 32px;
+            transform:rotate(90deg);
+          }
 .soldier{
     width: 40px;
     height: 40px;

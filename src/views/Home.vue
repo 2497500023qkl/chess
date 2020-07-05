@@ -2,9 +2,9 @@
   <div class="home">
     <div class="chess">
       <div class="Chess">
-<board class="board" v-for="i in disc" v-bind:c="i"/>
+<board class="board" v-for="i in disc" v-bind:c="i" />
       </div>
-      <fictitious class="fictitious"/>
+      <fictitious class="fictitious" v-bind:user="$route.query.id"/>
     </div>
   </div>
 </template>
@@ -18,9 +18,21 @@ export default {
     board,
     fictitious,
   },
+  mounted(){
+    this.u=this.$route.query.id;
+      if(this.u.username==undefined){
+        if(localStorage.getItem("token")==null){
+          alert("未登录");
+          this.$router.push('/');
+        }else{
+          this.$router.push('/homepage'); 
+        }
+      }
+  },
   data(){
     return{
       i:0,
+      u:null,
       disc:[
         {"class":1,"line":1},
         {"class":1,"line":2},
